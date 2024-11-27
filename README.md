@@ -126,3 +126,48 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - JOSE ANTONIO GARCÍA ESCANDÓN for guidance and support
 - IE University Simulation and Parallel Computing Course
 
+## 🚀 How to Run the Code
+
+### Prerequisites
+- Python 3.7 or higher
+- Tkinter (usually comes with Python installation)
+- Git installed on your system
+
+### Installation & Running
+1. Clone the repository:
+```bash
+git clone https://github.com/lucaslosantos/mallsimulation.git
+```
+
+2. Navigate to the project directory:
+```bash
+cd mallsimulation
+```
+
+3. Run the main simulation:
+```bash
+python ULTIMATE.py
+```
+or
+```bash
+python3 ULTIMATE.py
+```
+
+### What to Expect
+- A GUI window will open showing the mall simulation
+- The parking grid shows real-time parking status:
+  - White spaces: Empty regular spots
+  - Yellow spaces: Empty EV spots
+  - Gray spaces: Occupied regular spots
+  - Green spaces with ⚡: Occupied EV spots
+  - Blue spaces (~~~): Flooded level
+  - Red spaces (XXX): Blocked spots
+- The right panel shows financial metrics, customer counts, and business status
+- Activity and incident logs update in real-time
+
+### Troubleshooting
+If you get a "No module named 'tkinter'" error:
+- For Ubuntu/Debian: `sudo apt-get install python3-tk`
+- For macOS: `brew install python-tk`
+- For Windows: Reinstall Python and make sure to check "tcl/tk and IDLE" during installation
+
