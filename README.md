@@ -139,18 +139,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 git clone https://github.com/lucaslosantos/mallsimulation.git
 ```
 
-2. Navigate to the project directory:
-```bash
-cd mallsimulation
-```
-
-3. Run the main simulation:
+2. Run the main simulation:
 ```bash
 python ULTIMATE.py
-```
-or
-```bash
-python3 ULTIMATE.py
 ```
 
 ### What to Expect
