@@ -118,8 +118,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👥 Authors
 
-- Lucas Losantos 
+- Sofia Serantes
+- Celia Sanmartin
+- Clementine Mathieu
 - Antonio Cabral
+- Lucas Losantos 
 
 ## 🙏 Acknowledgments
 
