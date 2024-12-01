@@ -142,9 +142,51 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 git clone https://github.com/lucaslosantos/mallsimulation.git
 ```
 
-2. Run the main simulation:
+2. Create and activate a virtual environment:
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+```
+
+3. Install required packages:
+```bash
+pip install pandas numpy matplotlib seaborn
+```
+
+4. Run the main simulation:
 ```bash
 python ULTIMATE.py
+```
+
+5. To view statistics (optional):
+```bash
+python view_stats.py
+```
+
+### Managing Dependencies
+- The project uses a virtual environment to manage dependencies
+- To save the current package state:
+```bash
+pip freeze > requirements.txt
+```
+- To install from requirements:
+```bash
+pip install -r requirements.txt
+```
+
+### Important Notes
+- Don't commit the `venv` folder to version control
+- The `venv` folder is already added to `.gitignore`
+- Always activate the virtual environment before running the simulation
+- To deactivate the virtual environment when done:
+```bash
+deactivate
 ```
 
 ### What to Expect

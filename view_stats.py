@@ -2,12 +2,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Add this line at the start to ensure plots display
+plt.switch_backend('TkAgg')
+
 def view_mall_stats():
     # Read the CSV file
     df = pd.read_csv('mall_stats.csv')
     
     # Create a figure with subplots
-    plt.style.use('seaborn')
+    plt.style.use('fivethirtyeight')
     fig = plt.figure(figsize=(15, 10))
     
     # 1. Revenue and Expenses Plot
@@ -60,7 +63,7 @@ def view_mall_stats():
 
     # Adjust layout and display
     plt.tight_layout()
-    plt.show()
+    plt.savefig('mall_stats.png')
 
     # Print summary statistics
     print("\n=== Mall Performance Summary ===")
@@ -73,5 +76,6 @@ def view_mall_stats():
     print("\nMost Popular Movie:", df['Most Popular Movie'].mode().iloc[0])
     print("Most Profitable Restaurant:", df['Top Restaurant'].mode().iloc[0])
 
+# Add this line at the end of the file to actually call the function
 if __name__ == "__main__":
-    view_mall_stats() 
+    view_mall_stats()
