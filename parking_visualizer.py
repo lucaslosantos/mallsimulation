@@ -19,6 +19,11 @@ class ParkingVisualizer:
         self.root.title("Mall Parking Status")
         self.root.geometry("800x600")
         
+        # Add close button
+        close_button = ttk.Button(self.root, text="End Simulation", 
+                                command=self.root.protocol("WM_DELETE_WINDOW"))
+        close_button.grid(row=99, column=0, pady=10)  # Put at bottom
+        
         # Setup the three main sections
         self._setup_frames()
         self._setup_parking_grid()

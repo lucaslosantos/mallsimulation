@@ -7,6 +7,7 @@ from tkinter import ttk
 from parking_visualizer import ParkingVisualizer
 from concurrent.futures import ThreadPoolExecutor
 import csv
+import os
 
 # Constantes de tiempo
 SIMULATION_HOUR = 2.5  # 2.5 segundos = 1 hora simulada
@@ -405,20 +406,21 @@ class MallManager:
         # Add ThreadPoolExecutor with a reasonable number of workers
         self.customer_executor = ThreadPoolExecutor(max_workers=20)  # Adjust based on your needs
 
-        # Create/open CSV file with headers
-        with open('mall_stats.csv', 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow([
-                'Day', 
-                'Daily Revenue', 
-                'Daily Expenses', 
-                'Daily Customers',
-                'Daily Incidents',
-                'Failed Parking Attempts',
-                'Most Popular Movie',
-                'Top Restaurant',
-                'Top Shop'
-            ])
+        # Initialize CSV file with headers if it doesn't exist
+        if not os.path.exists('mall_stats.csv'):
+            with open('mall_stats.csv', 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    'Day',
+                    'Daily Revenue',
+                    'Daily Expenses',
+                    'Daily Customers',
+                    'Daily Incidents',
+                    'Failed Parking Attempts',
+                    'Most Popular Movie',
+                    'Top Restaurant',
+                    'Top Shop'
+                ])
 
     def start_gui(self):
         """Initialize and start the GUI"""
@@ -691,12 +693,21 @@ def run_mall_simulation():
     """Main function to run the mall simulation."""
     mall = MallManager()
     
+    def on_closing():
+        """Handle window closing event"""
+        # Save final stats before closing
+        mall.reset_daily_stats()  # This will save to CSV
+        mall.root.destroy()
+        os._exit(0)  # Force exit all threads
+    
     # Start simulation in background thread
     simulation_thread = threading.Thread(target=run_simulation_loop, args=(mall,), daemon=True)
     simulation_thread.start()
     
     # Run GUI on main thread
     mall.start_gui()
+    mall.root.protocol("WM_DELETE_WINDOW", on_closing)  # Bind closing event
+    mall.root.mainloop()
 
 def run_simulation_loop(mall):
     """Separate function to run the simulation loop"""
