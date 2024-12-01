@@ -382,6 +382,9 @@ class MallManager:
 
         self.visualizer = None
 
+        # Add day counter
+        self.current_day = 1
+
     def start_gui(self):
         """Initialize and start the GUI"""
         self.visualizer = ParkingVisualizer(self, SIMULATION_HOUR, Restaurant)
@@ -562,6 +565,10 @@ class MallManager:
         # Accumulate daily values into totals
         self.total_revenue += self.daily_revenue
         self.total_expenses += self.daily_expenses
+        
+        # Increment day counter
+        self.current_day += 1
+        print(f"\n=== New Day {self.current_day} ===")
         
         # Reset daily counters
         self.daily_revenue = 0

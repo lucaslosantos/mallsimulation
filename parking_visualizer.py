@@ -30,9 +30,19 @@ class ParkingVisualizer:
         self.main_frame = ttk.Frame(self.root, padding="10")
         self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
+        # Configure grid weights to allow expansion
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        self.main_frame.grid_columnconfigure(1, weight=1)
+        self.main_frame.grid_rowconfigure(0, weight=1)
+        
         # Left side - Parking and Activity Info
         self.left_frame = ttk.Frame(self.main_frame)
         self.left_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.left_frame.grid_columnconfigure(0, weight=1)
+        self.left_frame.grid_rowconfigure(1, weight=1)  # Make activity log expandable
+        self.left_frame.grid_rowconfigure(2, weight=1)  # Make incidents log expandable
         
         # Parking visualization section
         self.parking_frame = ttk.LabelFrame(self.left_frame, text="Parking Status", padding="5")
@@ -40,15 +50,19 @@ class ParkingVisualizer:
         
         # Activity log (moved from right)
         self.log_frame = ttk.LabelFrame(self.left_frame, text="Recent Activities", padding="5")
-        self.log_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
+        self.log_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.log_frame.grid_columnconfigure(0, weight=1)
+        self.log_frame.grid_rowconfigure(0, weight=1)
         self.activity_text = tk.Text(self.log_frame, width=40, height=10)
-        self.activity_text.grid(row=0, column=0)
+        self.activity_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # Incidents log (moved from right)
         self.incidents_frame = ttk.LabelFrame(self.left_frame, text="Recent Incidents", padding="5")
-        self.incidents_frame.grid(row=2, column=0, sticky=(tk.W, tk.E))
+        self.incidents_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.incidents_frame.grid_columnconfigure(0, weight=1)
+        self.incidents_frame.grid_rowconfigure(0, weight=1)
         self.incidents_text = tk.Text(self.incidents_frame, width=40, height=5)
-        self.incidents_text.grid(row=0, column=0)
+        self.incidents_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # Parking rates info
         self.rates_frame = ttk.LabelFrame(self.left_frame, text="Parking Rates", padding="5")
@@ -159,6 +173,7 @@ class ParkingVisualizer:
         self.clock_label.configure(text=f"{int(hour_of_day):02d}:{int(minutes):02d}")
         
         status_text = (
+            f"=== DAY {self.mall.current_day} ===\n\n"
             f"=== FINANCIAL ===\n"
             f"Daily Revenue: ${self.mall.daily_revenue:.2f}\n"
             f"Daily Expenses: ${self.mall.daily_expenses:.2f}\n"
