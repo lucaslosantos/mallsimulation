@@ -121,7 +121,7 @@ class ParkingVisualizer:
 
     def _update_spot_display(self, label, level, spot):
         """Update individual parking spot display"""
-        if level in self.mall.parking_lot.inaccessible_levels:
+        if level in self.mall.parking_lot.inaccessible_levels.keys():
             label.configure(text="~~~", background="blue")  # Flooded
         elif (level, spot) in self.mall.parking_lot.blocked_spots:
             label.configure(text="XXX", background="red")   # Blocked

@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from parking_visualizer import ParkingVisualizer
 from concurrent.futures import ThreadPoolExecutor
+import csv
 
 # Constantes de tiempo
 SIMULATION_HOUR = 2.5  # 2.5 segundos = 1 hora simulada
@@ -56,13 +57,14 @@ class ParkingLot:
         self.spaces_per_level = spaces_per_level
         self.parking_structure = [[None] * spaces_per_level for _ in range(levels)]
         self.lock = threading.Lock()
-        self.inaccessible_levels = set()
+        self.inaccessible_levels = {}  # Changed from set to dict to store recovery times
         self.blocked_spots = {}  # Dictionary to store blocked spots and their recovery time
         self.incident_costs = {
             'flooding': (1000, 2000),    # Range of cost for flooding cleanup
             'collision': (300, 800),     # Range for collision damage
             'light': (50, 150)           # Range for light repair
         }
+        self.had_flooding = False  # New flag to track if flooding has occurred
         
     def get_level_name(self, level):
         """Convert level number to negative floor number (0 -> -5, 1 -> -4, etc.)"""
@@ -85,17 +87,31 @@ class ParkingLot:
                 'cost': 0
             })
 
-        # Flooding
-        if random.random() < 0.01:  # 1% probability
-            if 0 not in self.inaccessible_levels:
-                self.inaccessible_levels.add(0)
+        # Clean up resolved flooding
+        resolved_levels = [level for level, recovery_time in self.inaccessible_levels.items()
+                         if current_time > recovery_time]
+        for level in resolved_levels:
+            del self.inaccessible_levels[level]
+            incidents.append({
+                'type': 'resolved',
+                'message': f"Flooding on level {self.get_level_name(level)} has been cleared",
+                'cost': 0
+            })
+
+        # Flooding - only if it hasn't happened before
+        if not self.had_flooding and random.random() < 0.01:  # 1% probability
+            level = 0  # Always floods lowest level
+            if level not in self.inaccessible_levels:
+                recovery_time = current_time + (12 * SIMULATION_HOUR)  # 12-hour recovery
+                self.inaccessible_levels[level] = recovery_time
                 cost = random.uniform(*self.incident_costs['flooding'])
                 incidents.append({
                     'type': 'flooding',
-                    'message': f"Flooding on level -5 (lowest level). Level completely inaccessible!",
+                    'message': f"Flooding on level -5 (lowest level). Level inaccessible for 12 hours!",
                     'cost': cost
                 })
                 total_cost += cost
+                self.had_flooding = True  # Set flag to prevent future floods
 
         # Light malfunction
         if random.random() < 0.04:
@@ -389,6 +405,21 @@ class MallManager:
         # Add ThreadPoolExecutor with a reasonable number of workers
         self.customer_executor = ThreadPoolExecutor(max_workers=20)  # Adjust based on your needs
 
+        # Create/open CSV file with headers
+        with open('mall_stats.csv', 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                'Day', 
+                'Daily Revenue', 
+                'Daily Expenses', 
+                'Daily Customers',
+                'Daily Incidents',
+                'Failed Parking Attempts',
+                'Most Popular Movie',
+                'Top Restaurant',
+                'Top Shop'
+            ])
+
     def start_gui(self):
         """Initialize and start the GUI"""
         self.visualizer = ParkingVisualizer(self, SIMULATION_HOUR, Restaurant)
@@ -559,6 +590,27 @@ class MallManager:
 
     def reset_daily_stats(self):
         """Reset daily statistics while preserving totals"""
+        # Get top performers before reset
+        top_restaurant = max(self.restaurant_manager.restaurants.items(), 
+            key=lambda x: x[1]['daily_revenue'])
+        top_shop = max(self.shop_manager.shops.items(), 
+            key=lambda x: x[1]['daily_revenue'])
+
+        # Save to CSV
+        with open('mall_stats.csv', 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                self.current_day,
+                f"{self.daily_revenue:.2f}",
+                f"{self.daily_expenses:.2f}",
+                self.daily_customer_count,
+                self.daily_incidents,
+                self.daily_failed_attempts,
+                self.cinema.current_movie.value,
+                f"{top_restaurant[0].value}: ${top_restaurant[1]['daily_revenue']:.2f}",
+                f"{top_shop[0].display_name}: ${top_shop[1]['daily_revenue']:.2f}"
+            ])
+
         # Accumulate daily values into totals
         self.total_revenue += self.daily_revenue
         self.total_expenses += self.daily_expenses
