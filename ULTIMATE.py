@@ -5,6 +5,7 @@ from enum import Enum
 import tkinter as tk
 from tkinter import ttk
 from parking_visualizer import ParkingVisualizer
+from concurrent.futures import ThreadPoolExecutor
 
 # Constantes de tiempo
 SIMULATION_HOUR = 2.5  # 2.5 segundos = 1 hora simulada
@@ -385,6 +386,9 @@ class MallManager:
         # Add day counter
         self.current_day = 1
 
+        # Add ThreadPoolExecutor with a reasonable number of workers
+        self.customer_executor = ThreadPoolExecutor(max_workers=20)  # Adjust based on your needs
+
     def start_gui(self):
         """Initialize and start the GUI"""
         self.visualizer = ParkingVisualizer(self, SIMULATION_HOUR, Restaurant)
@@ -396,38 +400,31 @@ class MallManager:
         self.daily_customer_count += 1
         customer_id = self.customer_count
 
-        # Crear vehículo
+        # Create vehicle and customer
         vehicle_type = "electric" if random.random() < 0.3 else "gasoline"
         vehicle = Vehicle(customer_id, vehicle_type=vehicle_type)
-
-        # Crear cliente
         customer = Customer(customer_id, vehicle)
 
-        # Intentar estacionar con reintento
-        max_attempts = 3  # Try a few times in case a spot just freed up
+        # Try to park with retries
+        max_attempts = 3
         for attempt in range(max_attempts):
             level, spot, incidents = self.parking_lot.find_parking_spot(vehicle)
             if level is not None:
-                print(f"\nCustomer {customer_id} arrives at the mall, parks in spot {spot} in floor {self.parking_lot.get_level_name(level)} with their {vehicle}")
+                print(f"\nCustomer {customer_id} arrives at the mall...")
                 
-                # Registrar cliente activo
+                # Register active customer
                 self.active_customers[customer_id] = {
                     'customer': customer,
                     'parking': (level, spot),
                     'entry_time': time.time()
                 }
 
-                # Iniciar thread para las actividades del cliente
-                customer_thread = threading.Thread(
-                    target=self.handle_customer_activities,
-                    args=(customer_id,),
-                    daemon=True
-                )
-                customer_thread.start()
+                # Submit customer activities to thread pool instead of creating new thread
+                self.customer_executor.submit(self.handle_customer_activities, customer_id)
                 return
             
-            if attempt < max_attempts - 1:  # Don't sleep on last attempt
-                time.sleep(0.1)  # Small delay before retry
+            if attempt < max_attempts - 1:
+                time.sleep(0.1)
         
         print(f"\nCustomer {customer_id} couldn't find parking and left")
         self.failed_parking_attempts += 1
@@ -633,6 +630,10 @@ class MallManager:
             for incident in self.incident_log[-5:]:  # Mostrar los últimos 5 incidentes
                 print(f"- {incident}")
 
+    def __del__(self):
+        """Cleanup thread pool on deletion"""
+        if hasattr(self, 'customer_executor'):
+            self.customer_executor.shutdown(wait=True)
 
 def run_mall_simulation():
     """Main function to run the mall simulation."""
