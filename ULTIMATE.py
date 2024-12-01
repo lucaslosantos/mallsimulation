@@ -292,7 +292,7 @@ class Cinema:
 
 
 class RestaurantManager:
-    def __init__(self):
+    def __init__(self, mall):
         self.restaurants = {
             restaurant: {
                 'capacity': 10,
@@ -303,6 +303,7 @@ class RestaurantManager:
             } for restaurant in Restaurant
         }
         self.lock = threading.Lock()
+        self.mall = mall
 
     def try_seat_customer(self, restaurant):
         """Intenta sentar a un cliente en el restaurante especificado."""
@@ -313,6 +314,7 @@ class RestaurantManager:
                 self.restaurants[restaurant]['daily_revenue'] += spend
                 self.restaurants[restaurant]['total_revenue'] += spend
                 self.restaurants[restaurant]['daily_customers'] += 1
+                self.mall.balance += spend  # Add to mall balance
                 return spend
             return None
 
@@ -324,7 +326,7 @@ class RestaurantManager:
 
 
 class ShopManager:
-    def __init__(self):
+    def __init__(self, mall):
         self.shops = {
             shop: {
                 'daily_revenue': 0,
@@ -333,6 +335,7 @@ class ShopManager:
             } for shop in Shop
         }
         self.lock = threading.Lock()
+        self.mall = mall
 
     def process_purchase(self, shop, customer):
         """Procesa una compra en una tienda."""
@@ -341,6 +344,7 @@ class ShopManager:
             self.shops[shop]['daily_revenue'] += spend
             self.shops[shop]['total_revenue'] += spend
             self.shops[shop]['daily_customers'] += 1
+            self.mall.balance += spend  # Add to mall balance
             return spend
 
 
@@ -348,8 +352,8 @@ class MallManager:
     def __init__(self):
         self.parking_lot = ParkingLot()
         self.cinema = Cinema()
-        self.restaurant_manager = RestaurantManager()
-        self.shop_manager = ShopManager()
+        self.restaurant_manager = RestaurantManager(self)
+        self.shop_manager = ShopManager(self)
 
         # Financial tracking
         self.balance = 10000  # Starting balance
@@ -414,12 +418,12 @@ class MallManager:
                     'Day',
                     'Daily Revenue',
                     'Daily Expenses',
-                    'Daily Customers',
-                    'Daily Incidents',
-                    'Failed Parking Attempts',
-                    'Most Popular Movie',
-                    'Top Restaurant',
-                    'Top Shop'
+                    'Customer Count',
+                    'Incidents',
+                    'Failed Parking',
+                    'Movie',
+                    'Restaurant Stats',
+                    'Shop Stats'
                 ])
 
     def start_gui(self):
@@ -546,11 +550,11 @@ class MallManager:
         level, spot = customer_data['parking']
         entry_time = customer_data['entry_time']
 
-        # Calcular tiempo total y tarifa de estacionamiento
+        # Calculate total time and parking fee
         total_time = time.time() - entry_time
         parking_fee = self.calculate_parking_fee(customer.vehicle, total_time)
 
-        # Liberar espacio de estacionamiento
+        # Free parking spot
         self.parking_lot.retrieve_vehicle(level, spot)
 
         print(f"\nCustomer {customer_id} leaves the mall after {total_time / SIMULATION_HOUR:.1f} hours")
@@ -558,10 +562,11 @@ class MallManager:
         print(f"Total spent in activities: ${customer.total_spent:.2f}")
         print(f"Parking fee: ${parking_fee:.2f}")
 
-        # Actualizar ingresos
+        # Update revenues and balance
         with self.lock:
-            self.daily_revenue += parking_fee + customer.total_spent
-            self.total_revenue += parking_fee + customer.total_spent
+            total_payment = parking_fee + customer.total_spent
+            self.daily_revenue += total_payment
+            self.balance += total_payment  # Add to balance
             del self.active_customers[customer_id]
 
     def calculate_parking_fee(self, vehicle, time_parked):
@@ -592,42 +597,96 @@ class MallManager:
 
     def reset_daily_stats(self):
         """Reset daily statistics while preserving totals"""
-        # Get top performers before reset
-        top_restaurant = max(self.restaurant_manager.restaurants.items(), 
-            key=lambda x: x[1]['daily_revenue'])
-        top_shop = max(self.shop_manager.shops.items(), 
-            key=lambda x: x[1]['daily_revenue'])
+        try:
+            # Get all restaurant performances
+            restaurant_performances = []
+            for restaurant, data in self.restaurant_manager.restaurants.items():
+                restaurant_performances.append(
+                    f"{restaurant.value}: ${data['daily_revenue']:.2f}"
+                )
+            restaurant_stats = " | ".join(restaurant_performances)
 
-        # Save to CSV
-        with open('mall_stats.csv', 'a', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow([
-                self.current_day,
-                f"{self.daily_revenue:.2f}",
-                f"{self.daily_expenses:.2f}",
-                self.daily_customer_count,
-                self.daily_incidents,
-                self.daily_failed_attempts,
-                self.cinema.current_movie.value,
-                f"{top_restaurant[0].value}: ${top_restaurant[1]['daily_revenue']:.2f}",
-                f"{top_shop[0].display_name}: ${top_shop[1]['daily_revenue']:.2f}"
-            ])
+            # Get all shop performances
+            shop_performances = []
+            for shop, data in self.shop_manager.shops.items():
+                shop_performances.append(
+                    f"{shop.display_name}: ${data['daily_revenue']:.2f}"
+                )
+            shop_stats = " | ".join(shop_performances)
 
-        # Accumulate daily values into totals
-        self.total_revenue += self.daily_revenue
-        self.total_expenses += self.daily_expenses
-        
-        # Increment day counter
-        self.current_day += 1
-        print(f"\n=== New Day {self.current_day} ===")
-        
-        # Reset daily counters
-        self.daily_revenue = 0
-        self.daily_expenses = 0
-        self.daily_customer_count = 0
-        self.daily_failed_attempts = 0
-        self.daily_incidents = 0
-        self.day_start_time = time.time()
+            # If it's day 1, create new CSV file (overwrite existing)
+            if self.current_day == 1:
+                mode = 'w'  # Write mode (overwrites file)
+            else:
+                mode = 'a'  # Append mode
+
+            # Save to CSV with error handling
+            try:
+                with open('mall_stats.csv', mode, newline='') as f:
+                    writer = csv.writer(f)
+                    # Write headers if it's a new file
+                    if mode == 'w':
+                        writer.writerow([
+                            'Day',
+                            'Daily Revenue',
+                            'Daily Expenses',
+                            'Customer Count',
+                            'Incidents',
+                            'Failed Parking',
+                            'Movie',
+                            'Restaurant Stats',
+                            'Shop Stats'
+                        ])
+                    
+                    # Write the daily data
+                    writer.writerow([
+                        self.current_day,
+                        f"{self.daily_revenue:.2f}",
+                        f"{self.daily_expenses:.2f}",
+                        self.daily_customer_count,
+                        self.daily_incidents,
+                        self.daily_failed_attempts,
+                        self.cinema.current_movie.value,
+                        restaurant_stats,
+                        shop_stats
+                    ])
+            except IOError as e:
+                print(f"Error writing to CSV: {e}")
+
+            # Accumulate daily values into totals
+            self.total_revenue += self.daily_revenue
+            self.total_expenses += self.daily_expenses
+            
+            # Increment day counter
+            self.current_day += 1
+            print(f"\n=== New Day {self.current_day} ===")
+            
+            # Reset daily counters
+            self.daily_revenue = 0
+            self.daily_expenses = 0
+            self.daily_customer_count = 0
+            self.daily_failed_attempts = 0
+            self.daily_incidents = 0
+            
+            # Reset daily stats for shops
+            for shop in self.shop_manager.shops.values():
+                shop['daily_revenue'] = 0
+                shop['daily_customers'] = 0
+            
+            # Reset daily stats for restaurants
+            for restaurant in self.restaurant_manager.restaurants.values():
+                restaurant['daily_revenue'] = 0
+                restaurant['daily_customers'] = 0
+                restaurant['occupied'] = 0
+            
+            # Reset cinema daily stats
+            self.cinema.daily_revenue = 0
+            self.cinema.daily_customers = 0
+            
+            self.day_start_time = time.time()
+
+        except Exception as e:
+            print(f"Error in reset_daily_stats: {e}")
 
     def display_mall_status(self):
         """Muestra el estado actual del centro comercial."""
@@ -695,10 +754,19 @@ def run_mall_simulation():
     
     def on_closing():
         """Handle window closing event"""
-        # Save final stats before closing
-        mall.reset_daily_stats()  # This will save to CSV
-        mall.root.destroy()
-        os._exit(0)  # Force exit all threads
+        try:
+            # Save final stats before closing
+            mall.reset_daily_stats()  # This will save to CSV
+            
+            # Ensure all files are closed
+            for handler in logging.getLogger().handlers[:]:
+                handler.close()
+                
+            mall.root.destroy()
+            os._exit(0)  # Force exit all threads
+        except Exception as e:
+            print(f"Error during shutdown: {e}")
+            os._exit(1)
     
     # Start simulation in background thread
     simulation_thread = threading.Thread(target=run_simulation_loop, args=(mall,), daemon=True)

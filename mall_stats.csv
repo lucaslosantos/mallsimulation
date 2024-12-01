@@ -1,6 +1,8 @@
-Day,Daily Revenue,Daily Expenses,Daily Customers,Daily Incidents,Failed Parking Attempts,Most Popular Movie,Top Restaurant,Top Shop
-1,5879.25,2300.00,113,35,5,Star Wars,KFC: $340.43,Clothing Store: $1434.56
-1,4880.84,2300.00,102,33,0,Fight Club,McDonald's: $319.10,Clothing Store: $1688.81
-2,8861.85,2300.00,102,50,11,Dune,KFC: $685.28,Clothing Store: $2956.20
-1,5593.85,2300.00,113,47,6,Star Wars,KFC: $407.37,Clothing Store: $1926.96
-2,10404.93,2300.00,108,43,15,LaLaLand,KFC: $767.14,Clothing Store: $4328.13
+Day,Daily Revenue,Daily Expenses,Customer Count,Incidents,Failed Parking,Movie,Restaurant Stats,Shop Stats
+1,4306.71,2300.00,101,43,0,Dune,McDonald's: $287.15 | Burger King: $228.76 | KFC: $259.93,Clothing Store: $625.32 | Toys Store: $509.63 | Video Games Store: $496.21 | Sports Store: $468.87 | Supermarket: $752.72
+2,9561.68,2300.00,100,50,0,Fight Club,McDonald's: $325.12 | Burger King: $333.37 | KFC: $224.16,Clothing Store: $2723.76 | Toys Store: $360.36 | Video Games Store: $805.72 | Sports Store: $723.14 | Supermarket: $413.31
+3,8638.36,2400.00,114,46,0,Fight Club,McDonald's: $517.00 | Burger King: $545.36 | KFC: $245.43,Clothing Store: $1712.40 | Toys Store: $416.51 | Video Games Store: $902.43 | Sports Store: $847.04 | Supermarket: $792.82
+4,8923.46,2300.00,103,45,0,Fight Club,McDonald's: $393.71 | Burger King: $438.61 | KFC: $235.20,Clothing Store: $1672.46 | Toys Store: $596.89 | Video Games Store: $329.88 | Sports Store: $1118.88 | Supermarket: $626.26
+5,7727.37,2400.00,101,49,7,Dune,McDonald's: $426.83 | Burger King: $227.93 | KFC: $371.86,Clothing Store: $2135.88 | Toys Store: $296.66 | Video Games Store: $335.34 | Sports Store: $822.52 | Supermarket: $523.45
+6,8727.42,2300.00,111,62,14,LaLaLand,McDonald's: $411.56 | Burger King: $314.17 | KFC: $393.91,Clothing Store: $1731.04 | Toys Store: $251.62 | Video Games Store: $816.57 | Sports Store: $714.59 | Supermarket: $757.14
+7,8169.33,2400.00,105,50,13,Fight Club,McDonald's: $373.05 | Burger King: $278.80 | KFC: $387.00,Clothing Store: $982.61 | Toys Store: $579.66 | Video Games Store: $770.68 | Sports Store: $744.66 | Supermarket: $1060.30
